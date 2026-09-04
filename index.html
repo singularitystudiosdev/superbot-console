@@ -328,8 +328,6 @@
   .setup-step.is-done .step-title { color: var(--dim); }
   .step-tag { flex: none; font-size: 10px; letter-spacing: 0.14em; color: var(--dim); }
   .setup-step.is-current .step-tag { color: var(--flair); }
-  .step-sub { margin-top: 6px; font-size: 12px; line-height: 1.7; letter-spacing: 0.03em; color: var(--dim); }
-  .setup-step.is-done .step-sub { color: var(--faint); }
   .step-btn {
     position: relative; display: inline-flex; align-items: center; gap: 8px;
     margin-top: 16px; height: 38px; padding: 0 22px;
@@ -779,18 +777,10 @@
   (function () {
     "use strict";
     var STEPS = [
-      { title: "Install on this Mac",
-        sub: "One line wires every AI client on the machine — claude code, cursor, vs code, gemini cli.",
-        action: "run the installer" },
-      { title: "Link this Mac",
-        sub: "Pairs this machine to your superbot account. No email, no password.",
-        action: "link in the browser" },
-      { title: "Add a subscription",
-        sub: "Relaying every request through superbot — the green numbers come from here.",
-        action: "add subscription" },
-      { title: "Activate the relay",
-        sub: "Turn it on and wire your apps. Everything after this is automatic.",
-        action: "activate the relay" }
+      { title: "Install on this Mac", action: "run the installer" },
+      { title: "Link this Mac", action: "link in the browser" },
+      { title: "Add a subscription", action: "add subscription" },
+      { title: "Activate the relay", action: "activate the relay" }
     ];
 
     var list = document.getElementById("setup-list");
@@ -817,8 +807,7 @@
         body.className = "step-body";
         body.innerHTML =
           '<div class="step-head"><span class="step-title">' + step.title + "</span>" +
-          '<span class="step-tag">' + (done ? "wired" : (i === current ? "step " + (i + 1) + " of " + STEPS.length : "")) + "</span></div>" +
-          '<div class="step-sub">' + step.sub + "</div>";
+          '<span class="step-tag">' + (done ? "wired" : (i === current ? "step " + (i + 1) + " of " + STEPS.length : "")) + "</span></div>";
         el.appendChild(badge);
         el.appendChild(body);
         if (!done && i === current) {
