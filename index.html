@@ -792,7 +792,6 @@
         sub: "Turn it on and wire your apps. Everything after this is automatic.",
         action: "activate the relay" }
     ];
-    var ICONS = ["⌂", "⌁", "✚", "⏻"];
 
     var list = document.getElementById("setup-list");
     var finish = document.getElementById("setup-finish");
@@ -812,7 +811,7 @@
         el.className = "setup-step" + (done ? " is-done" : (i === current ? " is-current" : ""));
         var badge = document.createElement("div");
         badge.className = "step-badge";
-        badge.textContent = done ? "✓" : ICONS[i];
+        badge.textContent = done ? "✓" : "";
         badge.setAttribute("aria-hidden", "true");
         var body = document.createElement("div");
         body.className = "step-body";
