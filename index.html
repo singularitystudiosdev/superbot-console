@@ -350,11 +350,6 @@
   .step-btn:active { transform: scale(0.97); }
   .step-btn:disabled { cursor: default; color: var(--dim); }
   .setup-step.is-done .step-btn { display: none; }
-  .setup-finish {
-    margin-top: 22px; width: 100%; max-width: 760px; text-align: center;
-    font-size: 11px; letter-spacing: 0.1em; color: var(--faint);
-  }
-  .setup-finish .flair { color: var(--flair); }
 
   /* while installing, the nav is hidden and the checklist owns the frame */
   body.onboarding .nav { display: none; }
@@ -458,7 +453,6 @@
       <h1 class="page-title">set up superbot</h1>
     </div>
     <div class="setup-list" id="setup-list"></div>
-    <div class="setup-finish" id="setup-finish"></div>
   </section>
 
   <!-- ================= settings ================= -->
@@ -784,7 +778,6 @@
     ];
 
     var list = document.getElementById("setup-list");
-    var finish = document.getElementById("setup-finish");
     var d = store.get();
     if (typeof d.setupSteps !== "number") d.setupSteps = 0; // steps completed
 
@@ -825,7 +818,11 @@
                 d.setupDone = true;
               }
               store.save();
-              render();
+              if (d.setupDone) {
+                go("dashboard"); // completion enters the console instantly
+              } else {
+                render();
+              }
               dispatchEvent(new Event("superbot:copied")); // the mascot celebrates
             }, 900);
           });
@@ -833,29 +830,6 @@
         }
         list.appendChild(el);
       });
-      if (d.setupSteps >= STEPS.length) {
-        finish.innerHTML = "";
-        var enter = document.createElement("button");
-        enter.className = "mini-btn";
-        enter.type = "button";
-        enter.textContent = "enter the console →";
-        enter.addEventListener("click", function () { go("dashboard"); });
-        finish.appendChild(enter);
-        var reset = document.createElement("button");
-        reset.className = "mini-btn";
-        reset.type = "button";
-        reset.textContent = "reset onboarding";
-        reset.style.marginLeft = "10px";
-        reset.addEventListener("click", function () {
-          d.setupSteps = 0;
-          d.setupDone = false;
-          store.save();
-          render();
-        });
-        finish.appendChild(reset);
-      } else {
-        finish.innerHTML = "";
-      }
     }
     render();
   })();
