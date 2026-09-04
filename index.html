@@ -586,6 +586,8 @@
     var VIEWS = ["dashboard", "activity", "credits", "settings", "setup"];
     function show(name) {
       if (VIEWS.indexOf(name) === -1) name = "dashboard";
+      // onboarding gates the console: until setup is done, every view is setup
+      if (name !== "setup" && !store.get().setupDone) name = "setup";
       document.querySelectorAll(".view").forEach(function (v) {
         v.classList.toggle("is-active", v.id === "view-" + name);
       });
