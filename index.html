@@ -538,7 +538,6 @@
       minutesSaved: 372,
       credits: 100,
       autoReload: "on",
-      setupDone: false,
       autonomy: "ask first",
       activity: [
         { client: "gemini cli", task: "delete every branch except main", when: "1m ago" },
@@ -575,6 +574,9 @@
     };
   })();
 
+  // onboarding lives in memory only: every reload starts the setup again
+  var onboarding = { steps: 0, done: false };
+
   // ---------------- router: pill nav + #hash deep links ----------------
   (function () {
     "use strict";
@@ -582,9 +584,9 @@
     function show(name) {
       if (VIEWS.indexOf(name) === -1) name = "dashboard";
       // onboarding gates the console: until setup is done, every view is setup
-      if (!store.get().setupDone) name = "setup";
+      if (!onboarding.done) name = "setup";
       // while installing: no nav pills, checklist owns the frame
-      document.body.classList.toggle("onboarding", name === "setup" && !store.get().setupDone);
+      document.body.classList.toggle("onboarding", name === "setup" && !onboarding.done);
       document.querySelectorAll(".view").forEach(function (v) {
         v.classList.toggle("is-active", v.id === "view-" + name);
       });
@@ -778,7 +780,6 @@
 
     var list = document.getElementById("setup-list");
     var d = store.get();
-    if (typeof d.setupSteps !== "number") d.setupSteps = 0; // steps completed
 
     function go(view) {
       location.hash = "#" + view;
@@ -786,9 +787,9 @@
 
     function render() {
       list.textContent = "";
-      var current = d.setupSteps;
+      var current = onboarding.steps;
       STEPS.forEach(function (step, i) {
-        var done = i < d.setupSteps;
+        var done = i < onboarding.steps;
         var el = document.createElement("div");
         el.className = "setup-step" + (done ? " is-done" : (i === current ? " is-current" : ""));
         var badge = document.createElement("div");
@@ -812,12 +813,11 @@
             btn.textContent = "working…";
             // auto setup: nothing to fill in, the machine wires itself
             setTimeout(function () {
-              d.setupSteps = Math.max(d.setupSteps, i + 1);
-              if (d.setupSteps >= STEPS.length) {
-                d.setupDone = true;
+              onboarding.steps = Math.max(onboarding.steps, i + 1);
+              if (onboarding.steps >= STEPS.length) {
+                onboarding.done = true;
               }
-              store.save();
-              if (d.setupDone) {
+              if (onboarding.done) {
                 go("dashboard"); // completion enters the console instantly
               } else {
                 render();
