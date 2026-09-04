@@ -358,6 +358,10 @@
   }
   .setup-finish .flair { color: var(--flair); }
 
+  /* while installing, the nav is hidden and the checklist owns the frame */
+  body.onboarding .nav { display: none; }
+  body.onboarding .view.is-active { justify-content: center; }
+
   .view { display: none; width: 100%; flex-direction: column; align-items: center; }
   /* a view owns the whole frame below the nav: stretch and center its content */
   .view.is-active { display: flex; flex: 1; justify-content: center; }
@@ -587,7 +591,9 @@
     function show(name) {
       if (VIEWS.indexOf(name) === -1) name = "dashboard";
       // onboarding gates the console: until setup is done, every view is setup
-      if (name !== "setup" && !store.get().setupDone) name = "setup";
+      if (!store.get().setupDone) name = "setup";
+      // while installing: no nav pills, checklist owns the frame
+      document.body.classList.toggle("onboarding", name === "setup" && !store.get().setupDone);
       document.querySelectorAll(".view").forEach(function (v) {
         v.classList.toggle("is-active", v.id === "view-" + name);
       });
