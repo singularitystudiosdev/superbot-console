@@ -29,25 +29,6 @@
   }
   ::selection { background: var(--flair-soft); color: var(--fg); }
   #stars { position: fixed; inset: 0; z-index: 0; width: 100%; height: 100%; }
-
-  /* ---------- boot overlay: mascot, then a fade into the console ---------- */
-  #boot {
-    position: fixed; inset: 0; z-index: 50;
-    background: var(--bg);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 30px;
-    transition: opacity 0.6s ease;
-  }
-  #boot.is-done { opacity: 0; pointer-events: none; }
-  .pet-boot { font: 13px/1.15 ui-monospace, 'SF Mono', Menlo, monospace; }
-  .boot-caption {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.18em; color: var(--dim);
-    user-select: none;
-  }
-  .boot-caption::after {
-    content: '▌'; color: var(--flair); margin-left: 5px;
-    animation: live-blink 1.06s steps(1) infinite;
-  }
   .stage {
     position: relative; z-index: 1;
     min-height: 100%;
@@ -323,13 +304,6 @@
 </head>
 <body>
 <canvas id="stars" aria-hidden="true"></canvas>
-
-<!-- boot: the mascot alone for ~2.4s, then the console fades in -->
-<div id="boot" role="status" aria-label="loading superbot">
-  <pre class="pet pet-boot" id="pet-boot"></pre>
-  <div class="boot-caption">waking superbot</div>
-</div>
-
 <div class="stage">
 
   <nav class="nav" id="nav" aria-label="pages">
@@ -753,12 +727,6 @@
   const { Mascot } = await import('./mascot.js');
   // one live mascot beside the page title — the clones are static text filled in below
   new Mascot(document.getElementById('pet'), { cols: 24, rows: 11, variant: 'smolGrin', anim: 'perky' });
-
-  // boot: the mascot alone for ~2.4s, then the console fades in
-  const boot = document.getElementById('boot');
-  new Mascot(document.getElementById('pet-boot'), { cols: 34, rows: 15, variant: 'smolGrin', anim: 'perky' });
-  setTimeout(function () { boot.classList.add('is-done'); }, 2400);
-  setTimeout(function () { boot.remove(); }, 3200);
 </script>
 </body>
 </html>
