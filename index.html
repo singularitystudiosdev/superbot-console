@@ -297,6 +297,67 @@
   }
   .footer-note .flair { color: var(--flair); }
 
+  /* ---------- setup checklist (first run) ---------- */
+  .setup-list {
+    width: 100%; max-width: 760px;
+    display: flex; flex-direction: column;
+  }
+  .setup-step {
+    display: flex; align-items: flex-start; gap: 18px;
+    padding: 26px 22px;
+    border-bottom: 1px solid var(--line);
+  }
+  .setup-step:last-child { border-bottom: none; }
+  .step-badge {
+    flex: none; width: 34px; height: 34px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 13px; font-weight: 700;
+    background: var(--panel); border: 1px solid var(--faint); color: var(--dim);
+    transition: background 0.4s ease, border-color 0.4s ease, color 0.4s ease, box-shadow 0.4s ease;
+  }
+  .setup-step.is-current .step-badge {
+    border-color: var(--flair-soft); color: var(--flair);
+    box-shadow: inset 0 0 0 1px var(--flair-soft), 0 0 10px rgba(87,255,168,0.15);
+  }
+  .setup-step.is-done .step-badge {
+    background: var(--flair-soft); border-color: var(--flair-soft); color: var(--flair);
+  }
+  .step-body { flex: 1; }
+  .step-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .step-title { font-size: 15px; font-weight: 700; letter-spacing: 0.03em; color: var(--fg); }
+  .setup-step.is-done .step-title { color: var(--dim); }
+  .step-tag { flex: none; font-size: 10px; letter-spacing: 0.14em; color: var(--dim); }
+  .setup-step.is-current .step-tag { color: var(--flair); }
+  .step-sub { margin-top: 6px; font-size: 12px; line-height: 1.7; letter-spacing: 0.03em; color: var(--dim); }
+  .setup-step.is-done .step-sub { color: var(--faint); }
+  .step-btn {
+    position: relative; display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 16px; height: 38px; padding: 0 22px;
+    border-radius: 999px; border: none; cursor: pointer; isolation: isolate;
+    background: var(--panel); color: var(--flair);
+    font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+    transition: color 0.25s ease, transform 0.15s ease;
+  }
+  .step-btn::before {
+    content: ''; position: absolute; inset: -1px; border-radius: 999px; padding: 1px;
+    background: conic-gradient(from var(--superbot-angle),
+      var(--line) 0deg, var(--flair-soft) 30deg, var(--flair) 40deg,
+      var(--line) 120deg, var(--line) 360deg);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: superbot-spin 3s linear infinite; pointer-events: none; z-index: 1;
+  }
+  .step-btn:hover { color: #fff; }
+  .step-btn:hover::before { filter: brightness(1.6); }
+  .step-btn:active { transform: scale(0.97); }
+  .step-btn:disabled { cursor: default; color: var(--dim); }
+  .setup-step.is-done .step-btn { display: none; }
+  .setup-finish {
+    margin-top: 22px; width: 100%; max-width: 760px; text-align: center;
+    font-size: 11px; letter-spacing: 0.1em; color: var(--faint);
+  }
+  .setup-finish .flair { color: var(--flair); }
+
   .view { display: none; width: 100%; flex-direction: column; align-items: center; }
   /* a view owns the whole frame below the nav: stretch and center its content */
   .view.is-active { display: flex; flex: 1; justify-content: center; }
@@ -311,6 +372,7 @@
     <button class="nav-btn" type="button" data-view="activity">activity</button>
     <button class="nav-btn" type="button" data-view="credits">credits</button>
     <button class="nav-btn" type="button" data-view="settings">settings</button>
+    <button class="nav-btn" type="button" data-view="setup">setup</button>
   </nav>
 
   <!-- ================= dashboard ================= -->
@@ -385,6 +447,16 @@
         <tbody id="invoice-body"></tbody>
       </table>
     </div>
+  </section>
+
+  <!-- ================= setup (first run) ================= -->
+  <section class="view" id="view-setup">
+    <div class="title-row">
+      <span class="pet-slot"></span>
+      <h1 class="page-title">set up superbot</h1>
+    </div>
+    <div class="setup-list" id="setup-list"></div>
+    <div class="setup-finish" id="setup-finish"></div>
   </section>
 
   <!-- ================= settings ================= -->
@@ -471,6 +543,7 @@
       minutesSaved: 372,
       credits: 100,
       autoReload: "on",
+      setupDone: false,
       autonomy: "ask first",
       activity: [
         { client: "gemini cli", task: "delete every branch except main", when: "1m ago" },
@@ -510,7 +583,7 @@
   // ---------------- router: pill nav + #hash deep links ----------------
   (function () {
     "use strict";
-    var VIEWS = ["dashboard", "activity", "credits", "settings"];
+    var VIEWS = ["dashboard", "activity", "credits", "settings", "setup"];
     function show(name) {
       if (VIEWS.indexOf(name) === -1) name = "dashboard";
       document.querySelectorAll(".view").forEach(function (v) {
@@ -532,7 +605,8 @@
     window.addEventListener("hashchange", function () {
       show(location.hash.slice(1));
     });
-    show(location.hash.slice(1) || "dashboard");
+    // first visit lands on the setup checklist; later visits go straight in
+    show(location.hash.slice(1) || (store.get().setupDone ? "dashboard" : "setup"));
   })();
 
   // ---------------- dashboard stats ----------------
@@ -691,6 +765,91 @@
       body.appendChild(tr);
     });
     sync();
+  })();
+
+  // ---------------- setup: first-run checklist, each step auto-wires ----------------
+  (function () {
+    "use strict";
+    var STEPS = [
+      { title: "Install on this Mac",
+        sub: "One line wires every AI client on the machine — claude code, cursor, vs code, gemini cli.",
+        action: "run the installer" },
+      { title: "Link this Mac",
+        sub: "Pairs this machine to your superbot account. No email, no password.",
+        action: "link in the browser" },
+      { title: "Add a subscription",
+        sub: "Relaying every request through superbot — the green numbers come from here.",
+        action: "add subscription" },
+      { title: "Activate the relay",
+        sub: "Turn it on and wire your apps. Everything after this is automatic.",
+        action: "activate the relay" }
+    ];
+    var ICONS = ["⌂", "⌁", "✚", "⏻"];
+
+    var list = document.getElementById("setup-list");
+    var finish = document.getElementById("setup-finish");
+    var d = store.get();
+    if (typeof d.setupSteps !== "number") d.setupSteps = 0; // steps completed
+
+    function go(view) {
+      location.hash = "#" + view;
+    }
+
+    function render() {
+      list.textContent = "";
+      var current = d.setupSteps;
+      STEPS.forEach(function (step, i) {
+        var done = i < d.setupSteps;
+        var el = document.createElement("div");
+        el.className = "setup-step" + (done ? " is-done" : (i === current ? " is-current" : ""));
+        var badge = document.createElement("div");
+        badge.className = "step-badge";
+        badge.textContent = done ? "✓" : ICONS[i];
+        badge.setAttribute("aria-hidden", "true");
+        var body = document.createElement("div");
+        body.className = "step-body";
+        body.innerHTML =
+          '<div class="step-head"><span class="step-title">' + step.title + "</span>" +
+          '<span class="step-tag">' + (done ? "wired" : (i === current ? "step " + (i + 1) + " of " + STEPS.length : "")) + "</span></div>" +
+          '<div class="step-sub">' + step.sub + "</div>";
+        el.appendChild(badge);
+        el.appendChild(body);
+        if (!done && i === current) {
+          var btn = document.createElement("button");
+          btn.className = "step-btn";
+          btn.type = "button";
+          btn.innerHTML = '<span aria-hidden="true">⚡</span> ' + step.action;
+          btn.addEventListener("click", function () {
+            btn.disabled = true;
+            btn.textContent = "working…";
+            // auto setup: nothing to fill in, the machine wires itself
+            setTimeout(function () {
+              d.setupSteps = Math.max(d.setupSteps, i + 1);
+              if (d.setupSteps >= STEPS.length) {
+                d.setupDone = true;
+              }
+              store.save();
+              render();
+              dispatchEvent(new Event("superbot:copied")); // the mascot celebrates
+            }, 900);
+          });
+          body.appendChild(btn);
+        }
+        list.appendChild(el);
+      });
+      if (d.setupSteps >= STEPS.length) {
+        finish.innerHTML = "";
+        var enter = document.createElement("button");
+        enter.className = "mini-btn";
+        enter.type = "button";
+        enter.textContent = "enter the console →";
+        enter.addEventListener("click", function () { go("dashboard"); });
+        finish.appendChild(enter);
+      } else {
+        finish.innerHTML = 'purely a demo — nothing is actually installed, <span class="flair">the steps just wire themselves</span>';
+      }
+    }
+    render();
   })();
 
   // ---------------- settings: segmented controls ----------------
