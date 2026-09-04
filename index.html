@@ -794,7 +794,6 @@
         el.className = "setup-step" + (done ? " is-done" : (i === current ? " is-current" : ""));
         var badge = document.createElement("div");
         badge.className = "step-badge";
-        badge.textContent = done ? "✓" : "";
         badge.setAttribute("aria-hidden", "true");
         var body = document.createElement("div");
         body.className = "step-body";
