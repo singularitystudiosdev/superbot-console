@@ -845,6 +845,18 @@
         enter.textContent = "enter the console →";
         enter.addEventListener("click", function () { go("dashboard"); });
         finish.appendChild(enter);
+        var reset = document.createElement("button");
+        reset.className = "mini-btn";
+        reset.type = "button";
+        reset.textContent = "reset onboarding";
+        reset.style.marginLeft = "10px";
+        reset.addEventListener("click", function () {
+          d.setupSteps = 0;
+          d.setupDone = false;
+          store.save();
+          render();
+        });
+        finish.appendChild(reset);
       } else {
         finish.innerHTML = 'purely a demo — nothing is actually installed, <span class="flair">the steps just wire themselves</span>';
       }
